@@ -1,44 +1,11 @@
-BASE_STEPS = '''#!/bin/bash
-mkdir -p ~/.foremast
-aws s3 sync s3://example-bucket/ . --exclude "*" --include "foremast.cfg"
-virtualenv -p python3 venv
-. venv/bin/activate
-pip install -U --quiet foremast==3.10.1
-'''
-APP_STEPS = BASE_STEPS + '''
-prepare-app-pipeline
-'''
-job("foremast-pipeline-prepare") {
-  parameters {
-    stringParam('APP', '', 'Application name')
-    stringParam('EMAIL', 'admin@example.com', 'Associated email')
-    stringParam('PROJECT', 'None', 'Git project associated with application')
-    stringParam('GIT_REPO', 'None', 'The repository name to associate with application')
-  }
-configure { project ->
-    project / 'authToken'('xxxxxxxxxxxxyyyyyyyyyydddddddddddyyyyyyyzzzzzzz')
-  }
-logRotator {
-    numToKeep(50)
-    artifactNumToKeep(50)
-  }
-multiscm {
-    git {
-      remote {
-        url("git@git.example.com:spinnaker/foremast-templates.git")
-        credentials('gitlab-jenkinsci')
-      }
-      extensions {
-        relativeTargetDirectory('foremast-templates')
-        }
-      branch('*/master')
+job('Job-DSL-Hello-World-Job') {
+    scm {
+        git('git://github.com/oveits/java-maven-junit-helloworld')
     }
-  }
-label('script')
-steps {
-    shell(APP_STEPS)
-  }
-wrappers {
-    colorizeOutput()
-  }
+    triggers {
+        scm('H/15 * * * *')
+    }
+    steps {
+        maven('-e clean test')
+    }
 }
